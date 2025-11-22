@@ -3,15 +3,15 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
+      "@/*": ["./*"]
+    },
+    "types": ["expo-router"],         // 👈 NECESARIO PARA QUE router.push FUNCIONE
+    "baseUrl": "."                    // 👈 Requerido para que paths funcione bien
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts"                   // 👈 Este archivo debe existir en la raíz
   ]
 }
