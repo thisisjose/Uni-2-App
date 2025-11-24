@@ -1,41 +1,38 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import React from "react";
+import { StyleSheet, Text, TextInput, View, ViewStyle } from "react-native";
 
 interface Props {
-  label: string;
+  label?: string;
   placeholder?: string;
   secure?: boolean;
+  style?: ViewStyle;
 }
 
-export default function FormInput({ label, placeholder, secure }: Props) {
+export default function FormInput({ label, placeholder, secure, style }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.container, style]}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         placeholder={placeholder}
         secureTextEntry={secure}
+        placeholderTextColor="#9BB7DB"
         style={styles.input}
-        placeholderTextColor="#999"
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: "#333",
-    fontWeight: "600",
-  },
+  container: { width: "100%", marginBottom: 14 },
+  label: { color: "#1F4F8A", marginBottom: 6, fontWeight: "600" },
   input: {
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#f2f2f2",
-    borderRadius: 10,
+    backgroundColor: "#F4F8FD",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
     fontSize: 16,
+    color: "#12344A",
+    borderWidth: 1,
+    borderColor: "#E6F0FB",
   },
 });

@@ -1,52 +1,72 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../components/Button";
 import FormInput from "../components/FormInput";
 
 export default function Login() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bienvenido a Uni-2</Text>
-      <Text style={styles.subtitle}>Ingresa para continuar</Text>
+    <LinearGradient colors={["#E6F2FF", "#D7EEFF"]} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.safe}>
 
-      <FormInput label="Correo" placeholder="correo@ejemplo.com" />
-      <FormInput label="Contraseña" secure placeholder="********" />
+        {/* --- LOGO CENTRADO --- */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../assets/icons/IconoUni2.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
 
-      <Button
-        text="Entrar"
-        onPress={() => router.push("/event/list")}
-      />
+        {/* --- FORMULARIO --- */}
+        <View style={styles.form}>
+          <FormInput label="Correo" placeholder="correo@uni.edu" />
+          <FormInput label="Contraseña" secure placeholder="********" />
 
-      <TouchableOpacity onPress={() => router.push("/register")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
-      </TouchableOpacity>
-    </View>
+          <Button text="Entrar" onPress={() => router.push("/event/list")} />
+
+          <TouchableOpacity
+            onPress={() => router.push("/register")}
+            style={styles.registerRow}
+          >
+            <Text style={styles.registerText}>
+              ¿No tienes cuenta?{" "}
+              <Text style={styles.registerLink}>Regístrate</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* --- PIE DE PÁGINA --- */}
+        <Text style={styles.footer}>Universitario • Comunidad • Solidario</Text>
+
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 25,
-    justifyContent: "center",
-    backgroundColor: "#fff",
+  safe: { flex: 1, justifyContent: "space-between" },
+
+  logoContainer: {
+    marginTop: 60,
+    alignItems: "center",
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    textAlign: "center",
+
+  logo: {
+    width: 250,   // <<-- TAMAÑO AUMENTADO
+    height: 250,  // <<-- TAMAÑO AUMENTADO
   },
-  subtitle: {
-    textAlign: "center",
-    marginBottom: 30,
-    fontSize: 16,
-    color: "#777",
+
+  form: {
+    paddingHorizontal: 28,
+    marginTop: -10,
   },
-  link: {
-    marginTop: 15,
-    textAlign: "center",
-    color: "#005EFF",
-    fontWeight: "600",
-    fontSize: 15
-  },
+
+  registerRow: { marginTop: 12, alignItems: "center" },
+  registerText: { color: "#4A6B84" },
+  registerLink: { color: "#0B63D6", fontWeight: "700" },
+
+  footer: { textAlign: "center", color: "#7E9FB3", marginBottom: 16 },
 });
