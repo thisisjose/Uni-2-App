@@ -1,19 +1,19 @@
-import { router } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
+import Button from "../components/Button";
 
 export default function Home() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bienvenido a Uni2</Text>
-      <Text style={styles.subtitle}>Aquí se mostrarán los eventos</Text>
+      <Text style={styles.title}>Uni-2</Text>
+      <Text style={styles.subtitle}>Colectas y campañas en un solo lugar</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/login')}>
-        <Text style={styles.buttonText}>Ir a Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.buttonSecondary} onPress={() => router.push('/event/list')}>
-        <Text style={styles.buttonText}>Ver Eventos</Text>
-      </TouchableOpacity>
+      <Button text="Ir a Login" onPress={() => router.push("/login")} />
+      <Button
+        text="Ver Eventos"
+        type="secondary"
+        onPress={() => router.push("/event/list")}
+      />
     </View>
   );
 }
@@ -21,38 +21,20 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff'
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
+    backgroundColor: "#fff",
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: "700",
   },
   subtitle: {
-    marginTop: 10,
+    marginTop: 8,
     fontSize: 16,
-    color: '#555',
-    marginBottom: 20
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 25,
   },
-  button: {
-    backgroundColor: '#007bff',
-    padding: 12,
-    borderRadius: 10,
-    width: '70%',
-    marginTop: 10
-  },
-  buttonSecondary: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 10,
-    width: '70%',
-    marginTop: 10
-  },
-  buttonText: {
-    textAlign: 'center',
-    color: 'white',
-    fontSize: 16
-  }
 });

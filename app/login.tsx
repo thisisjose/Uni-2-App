@@ -1,19 +1,23 @@
-import { router } from 'expo-router';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Button from "../components/Button";
+import FormInput from "../components/FormInput";
 
 export default function Login() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
+      <Text style={styles.title}>Bienvenido a Uni-2</Text>
+      <Text style={styles.subtitle}>Ingresa para continuar</Text>
 
-      <TextInput placeholder="Email" style={styles.input} />
-      <TextInput placeholder="Contraseña" secureTextEntry style={styles.input} />
+      <FormInput label="Correo" placeholder="correo@ejemplo.com" />
+      <FormInput label="Contraseña" secure placeholder="********" />
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </TouchableOpacity>
+      <Button
+        text="Entrar"
+        onPress={() => router.push("/event/list")}
+      />
 
-      <TouchableOpacity onPress={() => router.push('/register')}>
+      <TouchableOpacity onPress={() => router.push("/register")}>
         <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
     </View>
@@ -23,36 +27,26 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
+    padding: 25,
+    justifyContent: "center",
+    backgroundColor: "#fff",
   },
   title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center'
+    fontSize: 32,
+    fontWeight: "700",
+    textAlign: "center",
   },
-  input: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    marginBottom: 15
-  },
-  button: {
-    backgroundColor: '#007bff',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 10
-  },
-  buttonText: {
-    color: 'white',
+  subtitle: {
+    textAlign: "center",
+    marginBottom: 30,
     fontSize: 16,
-    textAlign: 'center'
+    color: "#777",
   },
   link: {
-    marginTop: 12,
-    textAlign: 'center',
-    color: '#007bff'
-  }
+    marginTop: 15,
+    textAlign: "center",
+    color: "#005EFF",
+    fontWeight: "600",
+    fontSize: 15
+  },
 });
