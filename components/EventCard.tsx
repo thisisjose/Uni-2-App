@@ -5,15 +5,32 @@ interface Props {
   title: string;
   date: string;
   location?: string;
+  status: "activo" | "cancelado" | "completado"; // <-- LO NUEVO
 }
 
-export default function EventCard({ title, date, location }: Props) {
+export default function EventCard({ title, date, location, status }: Props) {
+  const getStatusStyle = () => {
+    switch (status) {
+      case "cancelado":
+        return { color: "#D9534F" }; // rojo
+      case "completado":
+        return { color: "#6C757D" }; // gris
+      default:
+        return { color: "#2ECC71" }; // verde
+    }
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.date}>{date}</Text>
+
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={styles.date}>{date}</Text>
+          <Text style={[styles.status, getStatusStyle()]}>{status.toUpperCase()}</Text>
+        </View>
       </View>
+
       {location ? <Text style={styles.location}>{location}</Text> : null}
     </View>
   );
@@ -36,5 +53,6 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontSize: 17, fontWeight: "700", color: "#063256" },
   date: { fontSize: 13, color: "#6B8CA6" },
+  status: { marginTop: 4, fontSize: 12, fontWeight: "700" },
   location: { marginTop: 8, color: "#5B7A8F" },
 });

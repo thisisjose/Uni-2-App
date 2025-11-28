@@ -1,62 +1,44 @@
-import { router } from "expo-router";
+import EventCard from "components/EventCard";
 import React from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import EventCard from "../../components/EventCard";
+import { ScrollView, Text, View } from "react-native";
 
-const eventos = [
-  { id: "1", nombre: "Colecta de comida", descripcion: "Apoyo a familias", fecha: "10 Feb 2025" },
-  { id: "2", nombre: "Donación de ropa", descripcion: "Ropa para invierno", fecha: "22 Feb 2025" },
-  { id: "3", nombre: "Recolección de útiles", descripcion: "Útiles escolares", fecha: "03 Mar 2025" },
+// Tus datos locales
+const events = [
+  { id: 1, title: "Evento de Prueba", date: "2025-01-10", location: "Auditorio", status: "activo" },
+  { id: 2, title: "Junta General", date: "2025-01-12", location: "Sala 4", status: "cancelado" },
+  { id: 3, title: "Taller Creativo", date: "2025-01-15", location: "Laboratorio", status: "completado" },
 ];
 
-export default function EventList() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Eventos activos</Text>
+// Normaliza el status por si llega raro
+function normalizeStatus(status?: string): "activo" | "cancelado" | "completado" {
+  const s = status?.toLowerCase();
 
-      <FlatList
-        data={eventos}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: "/event/detail", params: { id: item.id } })}
-          >
-            <EventCard title={item.nombre} date={item.fecha} location={item.descripcion} />
-          </TouchableOpacity>
-        )}
-      />
+  if (s === "cancelado") return "cancelado";
+  if (s === "completado") return "completado";
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push("/admin/create-event")}
-        accessibilityLabel="Crear evento"
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+  return "activo"; // default
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7FBFF", paddingHorizontal: 20, paddingTop: 24 },
-  title: { fontSize: 26, fontWeight: "800", color: "#063256", marginBottom: 12 },
-  fab: {
-    position: "absolute",
-    bottom: 30,
-    right: 24,
-    backgroundColor: "#0B63D6",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#0b63d6",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.14,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  fabText: { fontSize: 34, color: "#fff", lineHeight: 36 },
-});
+export default function ListScreen() {
+  return (
+    <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 60 }}>
+      {/* 🔽 AQUÍ SE BAJA LA PANTALLA 🔽 */}
+
+      <Text style={{ fontSize: 26, fontWeight: "800", color: "#063256", marginBottom: 15 }}>
+        Lista de Eventos
+      </Text>
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        {events.map((ev) => (
+          <EventCard
+            key={ev.id}
+            title={ev.title}
+            date={ev.date}
+            location={ev.location}
+            status={normalizeStatus(ev.status)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
