@@ -1,22 +1,38 @@
 import React from "react";
-import { StyleSheet, Text, TextInput, View, ViewStyle } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native";
 
-interface Props {
+interface Props extends TextInputProps {
   label?: string;
-  placeholder?: string;
-  secure?: boolean;
-  style?: ViewStyle;
+  containerStyle?: ViewStyle;
+  inputStyle?: TextStyle;
 }
 
-export default function FormInput({ label, placeholder, secure, style }: Props) {
+export default function FormInput({
+  label,
+  placeholder,
+  secureTextEntry,
+  containerStyle,
+  inputStyle,
+  ...rest
+}: Props) {
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
+
       <TextInput
         placeholder={placeholder}
-        secureTextEntry={secure}
+        secureTextEntry={secureTextEntry}
         placeholderTextColor="#9BB7DB"
-        style={styles.input}
+        style={[styles.input, inputStyle]}
+        {...rest}
       />
     </View>
   );
