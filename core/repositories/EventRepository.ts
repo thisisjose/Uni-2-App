@@ -1,5 +1,5 @@
 import api from '../../services/api';
-import { CreateEventData, Event } from '../models/Event';
+import { CreateEventData, Event, EventStatus } from '../models/Event';
 
 export class EventRepository {
   // Obtener todos los eventos
@@ -126,5 +126,23 @@ async leaveEvent(eventId: string): Promise<Event | null> {
   }
 }
 
+// Actualizar status del evento (solo admin)
+async updateEventStatus(id: string, status: EventStatus): Promise<Event | null> {
+  try {
+    console.log('📝 Actualizando status del evento:', id, 'a:', status);
+    const response = await api.put(`/events/${id}`, { status });
+    
+    if (response.data.success) {
+      console.log('✅ Status actualizado');
+      return response.data.data;
+    } else {
+      throw new Error(response.data.message || 'Error actualizando status');
+    }
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message;
+    console.error('❌ Error updateEventStatus:', errorMessage);
+    throw new Error(errorMessage);
+  }
+}
 
 }

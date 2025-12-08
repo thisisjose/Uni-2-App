@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { Event } from '../../core/models/Event';
+import { Event, EventStatus } from '../../core/models/Event';
 import { EventRepository } from '../../core/repositories/EventRepository';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -19,6 +19,7 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -177,6 +178,48 @@ export default function EventDetailScreen() {
         }
       ]
     );
+  };
+
+  const handleChangeStatus = async (newStatus: EventStatus) => {
+    if (!id || !event || !user || user.role !== 'admin') return;
+    
+    Alert.alert(
+      'Cambiar estado',
+      `¿Cambiar estado a "${getStatusLabel(newStatus)}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Confirmar',
+          onPress: async () => {
+            setUpdatingStatus(true);
+            try {
+              const updatedEvent = await eventRepository.updateEventStatus(id as string, newStatus);
+              if (updatedEvent) {
+                setEvent(updatedEvent);
+                Alert.alert(
+                  'Éxito',
+                  `Estado cambiado a "${getStatusLabel(newStatus)}"`,
+                  [{ text: 'OK' }]
+                );
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'No se pudo cambiar el estado');
+            } finally {
+              setUpdatingStatus(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const getStatusLabel = (status: EventStatus): string => {
+    const labels: { [key in EventStatus]: string } = {
+      'active': 'Activa',
+      'completed': 'Completada',
+      'cancelled': 'Cancelada'
+    };
+    return labels[status] || status;
   };
 
   const formatDate = (dateString: string) => {
@@ -354,6 +397,58 @@ export default function EventDetailScreen() {
               <Text style={styles.inactiveText}>
                 {event.status === 'completed' ? '✅ Campaña completada' : '❌ Campaña cancelada'}
               </Text>
+            </View>
+          )}
+
+          {user?.role === 'admin' && (
+            <View style={styles.adminControlsSection}>
+              <Text style={styles.adminControlsTitle}>🔧 Controles de Administrador</Text>
+              <View style={styles.statusButtonsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.statusButton,
+                    event.status === 'active' && styles.statusButtonActive,
+                    updatingStatus && styles.statusButtonDisabled
+                  ]}
+                  onPress={() => handleChangeStatus('active')}
+                  disabled={updatingStatus || event.status === 'active'}
+                >
+                  <Text style={[
+                    styles.statusButtonText,
+                    event.status === 'active' && styles.statusButtonTextActive
+                  ]}>Activa</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.statusButton,
+                    event.status === 'completed' && styles.statusButtonCompleted,
+                    updatingStatus && styles.statusButtonDisabled
+                  ]}
+                  onPress={() => handleChangeStatus('completed')}
+                  disabled={updatingStatus || event.status === 'completed'}
+                >
+                  <Text style={[
+                    styles.statusButtonText,
+                    event.status === 'completed' && styles.statusButtonTextActive
+                  ]}>Completada</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.statusButton,
+                    event.status === 'cancelled' && styles.statusButtonCancelled,
+                    updatingStatus && styles.statusButtonDisabled
+                  ]}
+                  onPress={() => handleChangeStatus('cancelled')}
+                  disabled={updatingStatus || event.status === 'cancelled'}
+                >
+                  <Text style={[
+                    styles.statusButtonText,
+                    event.status === 'cancelled' && styles.statusButtonTextActive
+                  ]}>Cancelada</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -578,5 +673,61 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     padding: 24,
     fontWeight: '500' 
+  },
+  adminControlsSection: {
+    backgroundColor: '#F0F3F9',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#DDE5F0'
+  },
+  adminControlsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A2B3D',
+    marginBottom: 14,
+    letterSpacing: 0.2
+  },
+  statusButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap'
+  },
+  statusButton: {
+    flex: 1,
+    minWidth: '30%',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#DDE5F0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  statusButtonActive: {
+    backgroundColor: '#34C759',
+    borderColor: '#34C759'
+  },
+  statusButtonCompleted: {
+    backgroundColor: '#FF9500',
+    borderColor: '#FF9500'
+  },
+  statusButtonCancelled: {
+    backgroundColor: '#FF3B30',
+    borderColor: '#FF3B30'
+  },
+  statusButtonDisabled: {
+    opacity: 0.6
+  },
+  statusButtonText: {
+    color: '#1A2B3D',
+    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: 0.2
+  },
+  statusButtonTextActive: {
+    color: '#FFFFFF'
   }
 });
