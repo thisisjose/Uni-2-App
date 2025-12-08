@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -266,8 +267,7 @@ export default function EventDetailScreen() {
         </View>
       </View>
 
-    
-
+      <ScrollView style={styles.scrollContent}>
         <View style={styles.card}>
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>Descripción</Text>
@@ -379,144 +379,158 @@ export default function EventDetailScreen() {
             <Text style={styles.emptyText}>Aún no hay participantes. ¡Sé el primero!</Text>
           )}
         </View>
-
+      </ScrollView>
     </View>
   
 )}
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   centerContainer: { 
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center',
     padding: 20 
   },
-  loadingText: { marginTop: 10, color: '#666' },
-  errorTitle: { fontSize: 20, fontWeight: 'bold', color: '#FF3B30', marginBottom: 10 },
-  errorText: { textAlign: 'center', color: '#666', marginBottom: 20 },
-  errorBackButton: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8 },
-  errorBackButtonText: { color: 'white', fontWeight: 'bold' },
+  loadingText: { marginTop: 12, color: '#4A5F7F', fontWeight: '500' },
+  errorTitle: { fontSize: 22, fontWeight: '700', color: '#FF3B30', marginBottom: 12 },
+  errorText: { textAlign: 'center', color: '#4A5F7F', marginBottom: 24, fontSize: 15, lineHeight: 22 },
+  errorBackButton: { backgroundColor: '#0B63D6', padding: 14, borderRadius: 10, paddingHorizontal: 28 },
+  errorBackButtonText: { color: 'white', fontWeight: '600', fontSize: 15 },
   header: { 
-    backgroundColor: 'white', 
-    padding: 15,
-    paddingTop: 50,
+    backgroundColor: '#FFFFFF', 
+    padding: 16,
+    paddingTop: 52,
     flexDirection: 'row', 
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#DDE5F0'
   },
   backButtonHeader: {
-    padding: 10,
-    marginRight: 10,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 20,
+    padding: 8,
+    marginRight: 12,
+    backgroundColor: '#F0F3F9',
+    borderRadius: 10,
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center'
   },
   backButtonHeaderText: { 
-    color: '#007AFF', 
-    fontWeight: 'bold',
+    color: '#0B63D6', 
+    fontWeight: '700',
     fontSize: 20
   },
   title: { 
     fontSize: 18, 
-    fontWeight: 'bold', 
+    fontWeight: '700', 
     flex: 1,
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#1A2B3D',
+    letterSpacing: 0.2
   },
   statusBadge: { 
     paddingHorizontal: 12, 
     paddingVertical: 6, 
-    borderRadius: 16,
-    marginLeft: 10
+    borderRadius: 8,
+    marginLeft: 12
   },
-  statusText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
-  scrollView: { flex: 1 },
+  statusText: { color: 'white', fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  scrollContent: { flex: 1 },
   card: { 
-    backgroundColor: 'white', 
-    margin: 15, 
+    backgroundColor: '#FFFFFF', 
+    margin: 16, 
     padding: 20, 
-    borderRadius: 12,
+    borderRadius: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: '#F0F3F9'
   },
   descriptionContainer: {
-    backgroundColor: '#F8F9FA',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 10,
     marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#007AFF'
+    borderLeftWidth: 3,
+    borderLeftColor: '#0B63D6'
   },
   description: { 
-    fontSize: 16, 
+    fontSize: 15, 
     lineHeight: 24, 
-    color: '#333',
-    textAlign: 'justify'
+    color: '#4A5F7F',
+    textAlign: 'justify',
+    fontWeight: '400'
   },
-  infoSection: { marginBottom: 15 },
+  infoSection: { marginBottom: 16, paddingBottom: 14, borderBottomWidth: 0.5, borderBottomColor: '#F0F3F9' },
   sectionTitle: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: '#666', 
-    marginBottom: 5 
+    fontSize: 13, 
+    fontWeight: '700', 
+    color: '#1A2B3D', 
+    marginBottom: 6,
+    letterSpacing: 0.2 
   },
-  infoText: { fontSize: 16, color: '#333' },
+  infoText: { fontSize: 15, color: '#4A5F7F', fontWeight: '500' },
   progressContainer: { marginTop: 20, marginBottom: 20 },
   progressLabels: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginBottom: 8 
+    marginBottom: 10 
   },
-  progressText: { fontSize: 16, fontWeight: '600', color: '#333' },
-  progressPercentage: { fontSize: 16, color: '#007AFF', fontWeight: 'bold' },
+  progressText: { fontSize: 14, fontWeight: '600', color: '#1A2B3D' },
+  progressPercentage: { fontSize: 14, color: '#0B63D6', fontWeight: '700', letterSpacing: 0.2 },
   progressBar: { 
-    height: 10, 
-    backgroundColor: '#E8E8E8', 
-    borderRadius: 5, 
+    height: 7, 
+    backgroundColor: '#E6F0FB', 
+    borderRadius: 3.5, 
     overflow: 'hidden' 
   },
   progressFill: { 
     height: '100%', 
-    backgroundColor: '#007AFF', 
-    borderRadius: 5 
+    backgroundColor: '#0B63D6', 
+    borderRadius: 3.5 
   },
   joinButton: { 
-    backgroundColor: '#34C759', 
+    backgroundColor: '#2DB16D', 
     padding: 16, 
-    borderRadius: 8, 
+    borderRadius: 10, 
     alignItems: 'center',
-    marginTop: 10
+    marginTop: 12,
+    shadowColor: '#2DB16D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5
   },
   joinButtonText: { 
     color: 'white', 
-    fontSize: 16, 
-    fontWeight: 'bold' 
+    fontSize: 15, 
+    fontWeight: '700',
+    letterSpacing: 0.3 
   },
   participationContainer: {
-    marginTop: 10
+    marginTop: 12
   },
   joinedBadge: { 
     backgroundColor: '#E8F5E9', 
-    padding: 12, 
-    borderRadius: 8, 
+    padding: 14, 
+    borderRadius: 10, 
     alignItems: 'center',
-    marginBottom: 10
+    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: '#2DB16D'
   },
-  joinedText: { color: '#2E7D32', fontWeight: 'bold', fontSize: 16 },
-  joinedDate: { color: '#4CAF50', fontSize: 14, marginTop: 4 },
+  joinedText: { color: '#1B5E20', fontWeight: '700', fontSize: 15 },
+  joinedDate: { color: '#2DB16D', fontSize: 13, marginTop: 6, fontWeight: '500' },
   leaveButton: {
     backgroundColor: 'transparent',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#FF3B30'
   },
   leavingButton: {
@@ -524,36 +538,45 @@ const styles = StyleSheet.create({
   },
   leaveButtonText: {
     color: '#FF3B30',
-    fontWeight: '600'
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.2
   },
   inactiveBadge: { 
     backgroundColor: '#FFF3E0', 
-    padding: 12, 
-    borderRadius: 8, 
+    padding: 14, 
+    borderRadius: 10, 
     alignItems: 'center',
-    marginTop: 10
+    marginTop: 12,
+    borderWidth: 0.5,
+    borderColor: '#FF9500'
   },
-  inactiveText: { color: '#EF6C00', fontWeight: 'bold', fontSize: 16 },
+  inactiveText: { color: '#E65100', fontWeight: '700', fontSize: 15 },
   participantsSection: { 
-    backgroundColor: 'white', 
-    margin: 15, 
+    backgroundColor: '#FFFFFF', 
+    margin: 16, 
     marginTop: 0,
     padding: 20, 
-    borderRadius: 12,
-    marginBottom: 30
+    borderRadius: 14,
+    marginBottom: 30,
+    borderWidth: 0.5,
+    borderColor: '#F0F3F9'
   },
   participantItem: { 
-    backgroundColor: '#F8F9FA', 
-    padding: 12, 
-    borderRadius: 8, 
-    marginBottom: 8 
+    backgroundColor: '#F8FAFC', 
+    padding: 14, 
+    borderRadius: 10, 
+    marginBottom: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: '#0B63D6'
   },
-  participantName: { fontSize: 15, fontWeight: '500' },
-  participantDate: { fontSize: 13, color: '#666', marginTop: 2 },
+  participantName: { fontSize: 14, fontWeight: '600', color: '#1A2B3D' },
+  participantDate: { fontSize: 12, color: '#4A5F7F', marginTop: 4, fontWeight: '400' },
   emptyText: { 
     textAlign: 'center', 
-    color: '#999', 
+    color: '#9BB7DB', 
     fontStyle: 'italic',
-    padding: 20 
+    padding: 24,
+    fontWeight: '500' 
   }
 });

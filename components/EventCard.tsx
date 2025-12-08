@@ -38,11 +38,6 @@ const EventCard: React.FC<Props> = ({ event, onPress }) => {
       </View>
       
       <View style={styles.infoRow}>
-        <Text style={styles.infoText}>📅 {formatDate(event.date)}</Text>
-        <Text style={styles.infoText}>📍 {event.location}</Text>
-      </View>
-      
-      <View style={styles.infoRow}>
         <Text style={styles.infoText}>👤 {event.organizer}</Text>
         <Text style={styles.infoText}>{getCategoryLabel(event.category)}</Text>
       </View>
@@ -85,81 +80,92 @@ const getCategoryLabel = (category: string): string => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: '#F0F3F9',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     flex: 1,
     marginRight: 8,
+    color: '#1A2B3D',
+    letterSpacing: 0.2,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
   statusText: {
     color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: '#4A5F7F',
     marginBottom: 12,
-    lineHeight: 20,
+    lineHeight: 21,
+    fontWeight: '400',
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#F0F3F9',
   },
   infoText: {
     fontSize: 13,
-    color: '#555',
+    color: '#4A5F7F',
+    fontWeight: '500',
   },
   progressContainer: {
-    marginTop: 12,
+    marginTop: 14,
   },
   progressLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   progressText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  progressPercentage: {
-    fontSize: 14,
-    color: '#007AFF',
+    fontSize: 13,
+    color: '#1A2B3D',
     fontWeight: '600',
   },
+  progressPercentage: {
+    fontSize: 13,
+    color: '#0B63D6',
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
   progressBar: {
-    height: 8,
-    backgroundColor: '#E8E8E8',
-    borderRadius: 4,
+    height: 7,
+    backgroundColor: '#E6F0FB',
+    borderRadius: 3.5,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
-    borderRadius: 4,
+    backgroundColor: '#0B63D6',
+    borderRadius: 3.5,
   },
 });
 

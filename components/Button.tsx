@@ -28,16 +28,16 @@ export default function Button({ text, onPress, type = "primary", style }: Props
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "#0B63D6",
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
     shadowColor: "#0b63d6",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   secondary: {
     backgroundColor: "#2DB16D",
@@ -45,14 +45,15 @@ const styles = StyleSheet.create({
   },
   ghost: {
     backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#E6EEF9",
+    borderWidth: 1.5,
+    borderColor: "#0B63D6",
     shadowColor: "transparent",
   },
   text: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
   ghostText: {
     color: "#0B63D6",

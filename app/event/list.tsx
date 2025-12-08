@@ -161,121 +161,141 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { 
-    backgroundColor: 'white', 
+    backgroundColor: '#FFFFFF', 
     padding: 20, 
-    paddingTop: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0'
+    paddingTop: 52,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#DDE5F0'
   },
   title: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    marginBottom: 10,
-    textAlign: 'center'
+    fontSize: 26, 
+    fontWeight: '800', 
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#0B63D6',
+    letterSpacing: -0.3
   },
   userInfo: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginBottom: 15 
+    marginBottom: 16 
   },
   welcome: { 
-    fontSize: 16, 
-    color: '#333',
-    fontWeight: '500'
+    fontSize: 15, 
+    color: '#1A2B3D',
+    fontWeight: '700',
+    letterSpacing: 0.2
   },
   roleText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2
+    fontSize: 13,
+    color: '#4A5F7F',
+    marginTop: 4,
+    fontWeight: '500'
   },
   logoutText: { 
     color: '#FF3B30', 
-    fontWeight: '500',
-    fontSize: 16
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.2
   },
   adminButton: { 
-    backgroundColor: '#007AFF', 
+    backgroundColor: '#0B63D6', 
     padding: 14, 
-    borderRadius: 8, 
+    borderRadius: 10, 
     alignItems: 'center',
-    marginTop: 5
+    marginTop: 8,
+    shadowColor: '#0B63D6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5
   },
   adminButtonText: { 
     color: 'white', 
-    fontWeight: 'bold',
-    fontSize: 16
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.3
   },
   list: { 
-    padding: 10,
-    paddingBottom: 20
+    padding: 12,
+    paddingBottom: 24
   },
   centerContainer: { 
     flex: 1, 
     justifyContent: 'center', 
     alignItems: 'center',
-    padding: 20 
+    padding: 24 
   },
   errorText: { 
     color: '#FF3B30', 
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: 'center',
-    fontSize: 16
+    fontSize: 15,
+    fontWeight: '600'
   },
   retryButton: { 
-    backgroundColor: '#E8E8E8', 
+    backgroundColor: '#E6F0FB', 
     padding: 12, 
-    borderRadius: 8,
-    marginTop: 10,
-    paddingHorizontal: 20
+    borderRadius: 10,
+    marginTop: 12,
+    paddingHorizontal: 24,
+    borderWidth: 1.5,
+    borderColor: '#0B63D6'
   },
   createButton: { 
-    backgroundColor: '#007AFF', 
+    backgroundColor: '#0B63D6', 
     padding: 14, 
-    borderRadius: 8, 
+    borderRadius: 10, 
     marginTop: 20,
-    paddingHorizontal: 20
+    paddingHorizontal: 24,
+    shadowColor: '#0B63D6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5
   },
   createButtonText: { 
     color: 'white', 
-    fontWeight: 'bold',
-    fontSize: 16
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.3
   },
   debugContainer: {
-    backgroundColor: '#333',
-    padding: 8,
-    margin: 10,
-    borderRadius: 6
+    backgroundColor: '#1A2B3D',
+    padding: 10,
+    margin: 12,
+    borderRadius: 8
   },
   debugText: {
-    color: '#FFF',
+    color: '#9BB7DB',
     fontSize: 11,
     fontFamily: 'monospace'
   },
-  // Nuevos estilos para eliminar
   eventItem: {
-    marginBottom: 15,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   deleteButton: {
     backgroundColor: '#FF3B30',
-    padding: 12,
+    padding: 14,
     alignItems: 'center',
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14
   },
   deleteButtonText: {
     color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.2
   }
 });
