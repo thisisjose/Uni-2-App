@@ -44,14 +44,14 @@ const EventCard: React.FC<Props> = ({ event, onPress }) => {
       
       <View style={styles.infoRow}>
         <Text style={styles.infoText}>👤 {event.organizer}</Text>
-        <Text style={styles.infoText}>🏷️ {getCategoryLabel(event.category)}</Text>
+        <Text style={styles.infoText}>{getCategoryLabel(event.category)}</Text>
       </View>
       
       <View style={styles.progressContainer}>
         <View style={styles.progressLabels}>
-          <Text style={styles.progressText}>
-            {event.currentProgress} / {event.targetGoal} participantes
-          </Text>
+<Text style={styles.progressText}>
+  {event.currentProgress} de {event.targetGoal} en la meta
+</Text>
           <Text style={styles.progressPercentage}>
             {Math.min(progressPercentage, 100).toFixed(0)}%
           </Text>

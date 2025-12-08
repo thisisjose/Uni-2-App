@@ -297,7 +297,7 @@ export default function EventDetailScreen() {
           <View style={styles.progressContainer}>
             <View style={styles.progressLabels}>
               <Text style={styles.progressText}>
-                {event.currentProgress} / {event.targetGoal} participantes
+                {event.currentProgress} / {event.targetGoal} en la meta
               </Text>
               <Text style={styles.progressPercentage}>
                 {Math.min(progressPercentage, 100).toFixed(0)}%
@@ -329,7 +329,7 @@ export default function EventDetailScreen() {
           {isParticipant && (
             <View style={styles.participationContainer}>
               <View style={styles.joinedBadge}>
-                <Text style={styles.joinedText}>✅ Ya estás participando</Text>
+                <Text style={styles.joinedText}>Ya estás participando</Text>
                 <Text style={styles.joinedDate}>
                   Te uniste el {new Date(event.participants.find(p => 
                     getParticipantUserId(p) === user?._id?.toString()

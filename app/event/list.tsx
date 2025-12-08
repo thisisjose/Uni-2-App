@@ -79,7 +79,7 @@ export default function EventsScreen() {
           style={styles.deleteButton}
           onPress={() => handleDeleteEvent(item._id)}
         >
-          <Text style={styles.deleteButtonText}>🗑️ Eliminar</Text>
+          <Text style={styles.deleteButtonText}>Eliminar</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -93,7 +93,7 @@ export default function EventsScreen() {
           <View>
             <Text style={styles.welcome}>Hola, {user?.name}</Text>
             <Text style={styles.roleText}>
-              {user?.role === 'admin' ? '👑 Administrador' : '👤 Voluntario'}
+              {user?.role === 'admin' ? 'Eres Administrador' : 'Eres Voluntario'}
             </Text>
           </View>
           <TouchableOpacity onPress={handleLogout}>
