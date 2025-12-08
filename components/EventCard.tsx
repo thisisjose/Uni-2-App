@@ -49,9 +49,9 @@ const EventCard: React.FC<Props> = ({ event, onPress }) => {
       
       <View style={styles.progressContainer}>
         <View style={styles.progressLabels}>
-<Text style={styles.progressText}>
-  {event.currentProgress} de {event.targetGoal} en la meta
-</Text>
+            <Text style={styles.progressText}>
+              {event.currentProgress} de {event.targetGoal} en la meta
+            </Text>
           <Text style={styles.progressPercentage}>
             {Math.min(progressPercentage, 100).toFixed(0)}%
           </Text>

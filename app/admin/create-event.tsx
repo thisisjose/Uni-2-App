@@ -1,10 +1,8 @@
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,8 +17,8 @@ import { useAuth } from '../../hooks/useAuth';
 export default function CreateEventScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateText, setDateText] = useState('');
+  const [timeText, setTimeText] = useState('');
   const [location, setLocation] = useState('');
   const [organizer, setOrganizer] = useState('');
   const [targetGoal, setTargetGoal] = useState('');
@@ -30,6 +28,10 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const eventRepository = new EventRepository();
   const { user } = useAuth();
+
+  // Refs para los inputs
+  const dateInputRef = useRef<TextInput>(null);
+  const timeInputRef = useRef<TextInput>(null);
 
   // Verificar que sea admin
   if (user?.role !== 'admin') {
@@ -43,11 +45,59 @@ export default function CreateEventScreen() {
     );
   }
 
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setDate(selectedDate);
+  // Formatear fecha automáticamente
+  const formatDateInput = (text: string) => {
+    // Solo números
+    let numbers = text.replace(/\D/g, '');
+    
+    // Limitar a 8 dígitos (DDMMYYYY)
+    if (numbers.length > 8) {
+      numbers = numbers.substring(0, 8);
     }
+    
+    // Aplicar formato
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.substring(0, 2)}/${numbers.substring(2)}`;
+    } else {
+      return `${numbers.substring(0, 2)}/${numbers.substring(2, 4)}/${numbers.substring(4, 8)}`;
+    }
+  };
+
+  // Formatear hora automáticamente
+  const formatTimeInput = (text: string) => {
+    // Solo números
+    let numbers = text.replace(/\D/g, '');
+    
+    // Limitar a 4 dígitos (HHMM)
+    if (numbers.length > 4) {
+      numbers = numbers.substring(0, 4);
+    }
+    
+    // Aplicar formato
+    if (numbers.length <= 2) {
+      return numbers;
+    } else {
+      return `${numbers.substring(0, 2)}:${numbers.substring(2)}`;
+    }
+  };
+
+  // Manejar cambio de fecha
+  const handleDateChange = (text: string) => {
+    const formatted = formatDateInput(text);
+    setDateText(formatted);
+    
+    // Auto-focus en el siguiente campo
+    if (formatted.length === 10) { // DD/MM/YYYY completo
+      timeInputRef.current?.focus();
+    }
+  };
+
+  // Manejar cambio de hora
+  const handleTimeChange = (text: string) => {
+    const formatted = formatTimeInput(text);
+    setTimeText(formatted);
   };
 
   const handleCreateEvent = async () => {
@@ -60,6 +110,65 @@ export default function CreateEventScreen() {
       Alert.alert('Error', 'La descripción es requerida');
       return;
     }
+
+    // Validar fecha
+    if (!dateText || dateText.length < 10) {
+      Alert.alert('Error', 'Complete la fecha (DD/MM/AAAA)');
+      return;
+    }
+
+    // Validar hora
+    if (!timeText || timeText.length < 5) {
+      Alert.alert('Error', 'Complete la hora (HH:MM)');
+      return;
+    }
+
+    // Parsear fecha
+    const [dayStr, monthStr, yearStr] = dateText.split('/');
+    const [hourStr, minuteStr] = timeText.split(':');
+    
+    const day = parseInt(dayStr);
+    const month = parseInt(monthStr);
+    const year = parseInt(yearStr);
+    const hours = parseInt(hourStr);
+    const minutes = parseInt(minuteStr);
+
+    // Validar valores
+    if (isNaN(day) || day < 1 || day > 31) {
+      Alert.alert('Error', 'Día inválido (1-31)');
+      return;
+    }
+    if (isNaN(month) || month < 1 || month > 12) {
+      Alert.alert('Error', 'Mes inválido (1-12)');
+      return;
+    }
+    if (isNaN(year) || year < 2024 || year > 2030) {
+      Alert.alert('Error', 'Año inválido (2024-2030)');
+      return;
+    }
+    if (isNaN(hours) || hours < 0 || hours > 23) {
+      Alert.alert('Error', 'Hora inválida (00-23)');
+      return;
+    }
+    if (isNaN(minutes) || minutes < 0 || minutes > 59) {
+      Alert.alert('Error', 'Minutos inválidos (00-59)');
+      return;
+    }
+
+    const eventDate = new Date(year, month - 1, day, hours, minutes);
+    
+    // Validar que la fecha sea válida
+    if (isNaN(eventDate.getTime())) {
+      Alert.alert('Error', 'Fecha u hora inválida');
+      return;
+    }
+
+    // Validar que no sea fecha pasada
+    if (eventDate < new Date()) {
+      Alert.alert('Error', 'La fecha y hora deben ser futuras');
+      return;
+    }
+
     if (!location.trim()) {
       Alert.alert('Error', 'La ubicación es requerida');
       return;
@@ -76,49 +185,50 @@ export default function CreateEventScreen() {
     // Asegurar que category sea EventCategory válido
     const validCategories: EventCategory[] = ['food', 'clothes', 'books', 'toys', 'medical', 'other'];
     const validCategory = validCategories.includes(category) 
-    ? category 
-    : 'other';
+      ? category 
+      : 'other';
 
-  const eventData = {
-    title,
-    description,
-    date: date.toISOString(),
-    location,
-    organizer,
-    targetGoal: parseInt(targetGoal),
-    category: validCategory
-  };
+    const eventData = {
+      title,
+      description,
+      date: eventDate.toISOString(),
+      location,
+      organizer,
+      targetGoal: parseInt(targetGoal),
+      category: validCategory
+    };
 
-  setLoading(true);
-  try {
-    const newEvent = await eventRepository.createEvent(eventData);
-    if (newEvent) {
-      // LIMPIAR FORMULARIO PARA QUE EL ADMIN PUEDA CREAR OTRO EVENTO SI SE LE DA LA GANA XDDDDD
-      setTitle('');
-      setDescription('');
-      setDate(new Date());
-      setLocation('');
-      setOrganizer('');
-      setTargetGoal('');
-      setCategory('other');
-      
-      Alert.alert(
-        '¡Éxito!',
-        'Campaña creada correctamente',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/event/list') // ESTE TE REDIRIGE A LA LIST DE EVENTOS XD
-          }
-        ]
-      );
+    setLoading(true);
+    try {
+      const newEvent = await eventRepository.createEvent(eventData);
+      if (newEvent) {
+        // LIMPIAR FORMULARIO
+        setTitle('');
+        setDescription('');
+        setDateText('');
+        setTimeText('');
+        setLocation('');
+        setOrganizer('');
+        setTargetGoal('');
+        setCategory('other');
+        
+        Alert.alert(
+          '¡Éxito!',
+          'Campaña creada correctamente',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/event/list')
+            }
+          ]
+        );
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo crear la campaña');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    Alert.alert('Error', error.message || 'No se pudo crear la campaña');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const categories = [
     { label: 'Alimentos', value: 'food' as EventCategory },
@@ -159,31 +269,33 @@ export default function CreateEventScreen() {
           maxLength={500}
         />
 
-        <Text style={styles.label}>Fecha y Hora *</Text>
-        <TouchableOpacity 
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.dateButtonText}>
-            {date.toLocaleDateString('es-ES', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.label}>Fecha (DD/MM/AAAA) *</Text>
+        <TextInput
+          ref={dateInputRef}
+          style={styles.input}
+          placeholder="DD/MM/AAAA"
+          value={dateText}
+          onChangeText={handleDateChange}
+          keyboardType="numeric"
+          maxLength={10}
+        />
+        <Text style={styles.hintText}>
+          Escribe números: 05022025 → 05/02/2025
+        </Text>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="datetime"
-            display="default"
-            onChange={handleDateChange}
-          />
-        )}
+        <Text style={styles.label}>Hora (HH:MM) *</Text>
+        <TextInput
+          ref={timeInputRef}
+          style={styles.input}
+          placeholder="HH:MM"
+          value={timeText}
+          onChangeText={handleTimeChange}
+          keyboardType="numeric"
+          maxLength={5}
+        />
+        <Text style={styles.hintText}>
+          Formato 24 horas: 1430 → 14:30
+        </Text>
 
         <Text style={styles.label}>Ubicación *</Text>
         <TextInput
@@ -245,7 +357,7 @@ export default function CreateEventScreen() {
   );
 }
 
-// LOS STYLES QUEDAN IGUAL (no los modifico)
+// STYLES IGUAL (sin cambios)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   centerContainer: { 
@@ -286,6 +398,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333'
   },
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: -15,
+    marginBottom: 15,
+    fontStyle: 'italic'
+  },
   input: {
     backgroundColor: 'white',
     borderWidth: 1,
@@ -298,18 +417,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top'
-  },
-  dateButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: '#333'
   },
   pickerContainer: {
     backgroundColor: 'white',
