@@ -27,26 +27,18 @@ export const useAuth = () => {
     }
   };
 
-  const login = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await userRepository.login({ email, password });
-      
-      if (result.success) {
-        setUser(result.user);
-        return { success: true, user: result.user };
-      } else {
-        setError(result.message || 'Error en login');
-        return { success: false, message: result.message };
-      }
-    } catch (err: any) {
-      setError(err.message);
-      return { success: false, message: err.message };
-    } finally {
-      setLoading(false);
-    }
-  };
+const login = async (email: string, password: string) => {
+  const result = await userRepository.login({ email, password });
+  if (result.success && result.user) {
+    const normalizedUser = {
+      ...result.user,
+      _id: result.user._id || result.user.id,
+      id: result.user.id || result.user._id
+    };
+    setUser(normalizedUser);
+  }
+  return result;
+};
 
   const register = async (name: string, email: string, password: string, role: string = 'user') => {
   try {

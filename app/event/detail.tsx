@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +17,7 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -25,20 +25,30 @@ export default function EventDetailScreen() {
 
   // Función para obtener el ID del usuario de un participante
   const getParticipantUserId = (participant: any): string => {
-    return typeof participant.userId === 'object' 
-      ? participant.userId._id 
-      : participant.userId;
+    if (!participant || !participant.userId) return '';
+    
+    if (typeof participant.userId === 'object') {
+      return participant.userId._id?.toString() || '';
+    }
+    
+    return participant.userId?.toString() || '';
   };
 
   // Función para obtener el nombre del usuario de un participante
   const getParticipantUserName = (participant: any): string => {
-    return typeof participant.userId === 'object' 
-      ? participant.userId.name 
-      : 'Usuario';
+    if (!participant || !participant.userId) return 'Usuario';
+    
+    if (typeof participant.userId === 'object') {
+      return participant.userId.name || 'Usuario';
+    }
+    
+    return 'Usuario';
   };
 
   useEffect(() => {
     if (id) {
+      console.log('🔄 useEffect: Cargando evento con ID:', id);
+      console.log('👤 Usuario actual:', user?.name, 'ID:', user?._id);
       loadEvent();
     }
   }, [id]);
@@ -52,6 +62,21 @@ export default function EventDetailScreen() {
       
       if (eventData) {
         setEvent(eventData);
+        
+        // 🔍 DEBUG: Verificar datos cargados
+        console.log('🔍 DEBUG Event cargado:');
+        console.log('📱 Usuario ID:', user?._id);
+        console.log('🎯 Evento ID:', eventData._id);
+        console.log('👥 Total participantes:', eventData.participants.length);
+        
+        if (eventData.participants.length > 0) {
+          console.log('📊 Lista de participantes:');
+          eventData.participants.forEach((p, i) => {
+            const pId = getParticipantUserId(p);
+            console.log(`   ${i}: ID=${pId}, Nombre=${getParticipantUserName(p)}`);
+          });
+        }
+        
       } else {
         Alert.alert('Error', 'No se encontró el evento');
       }
@@ -67,8 +92,12 @@ export default function EventDetailScreen() {
     
     // Verificar en frontend primero
     const isAlreadyParticipant = event.participants.some(
-      p => getParticipantUserId(p) === user._id
+      p => getParticipantUserId(p) === user._id?.toString()
     );
+    
+    console.log('🎯 Verificación join:');
+    console.log('   User ID:', user._id);
+    console.log('   isAlreadyParticipant:', isAlreadyParticipant);
     
     if (isAlreadyParticipant) {
       Alert.alert('Ya participas', 'Ya estás unido a esta campaña');
@@ -82,7 +111,6 @@ export default function EventDetailScreen() {
         setEvent(updatedEvent);
         // Sin alert, solo se actualiza la UI
       }
-      // No necesitas else, si hay error lo captura el catch
     } catch (error: any) {
       // Manejar específicamente el error de "ya participas"
       if (error.message.includes('Ya estás participando')) {
@@ -100,6 +128,20 @@ export default function EventDetailScreen() {
   const handleLeaveEvent = async () => {
     if (!id || !event || !user) return;
     
+    // Verificar que realmente está participando
+    const isParticipant = event.participants.some(
+      p => getParticipantUserId(p) === user._id?.toString()
+    );
+    
+    console.log('🎯 Verificación leave:');
+    console.log('   User ID:', user._id);
+    console.log('   isParticipant:', isParticipant);
+    
+    if (!isParticipant) {
+      Alert.alert('No participas', 'No estás unido a esta campaña');
+      return;
+    }
+    
     Alert.alert(
       'Salir de la campaña',
       '¿Estás seguro de que quieres dejar de participar en esta campaña?',
@@ -109,11 +151,27 @@ export default function EventDetailScreen() {
           text: 'Sí, salir', 
           style: 'destructive',
           onPress: async () => {
-            // TODO: Implementar endpoint para salirse
-            Alert.alert(
-              'Funcionalidad pendiente', 
-              'La opción para salirse de eventos estará disponible pronto.'
-            );
+            setLeaving(true);
+            try {
+              const updatedEvent = await eventRepository.leaveEvent(id as string);
+              if (updatedEvent) {
+                setEvent(updatedEvent);
+                Alert.alert(
+                  'Te has salido',
+                  'Has dejado de participar en esta campaña',
+                  [{ text: 'OK' }]
+                );
+              }
+            } catch (error: any) {
+              if (error.message.includes('No estás participando')) {
+                Alert.alert('No participas', 'No estás en esta campaña');
+                loadEvent();
+              } else {
+                Alert.alert('Error', error.message || 'No se pudo salir de la campaña');
+              }
+            } finally {
+              setLeaving(false);
+            }
           }
         }
       ]
@@ -144,6 +202,13 @@ export default function EventDetailScreen() {
     return categories[category] || category;
   };
 
+  // 🔍 DEBUG: Verificar estado antes de renderizar
+  console.log('🎯 RENDER - Estado actual:');
+  console.log('📦 Evento:', event ? 'Cargado' : 'Null');
+  console.log('👤 User:', user ? 'Autenticado' : 'No autenticado');
+  console.log('🆔 User ID:', user?._id);
+  console.log('📊 User ID tipo:', typeof user?._id);
+
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -167,10 +232,20 @@ export default function EventDetailScreen() {
     );
   }
 
+  // Verificación MEJORADA de isParticipant
+  const isParticipant = event.participants.some(p => {
+    const participantId = getParticipantUserId(p);
+    const userId = user?._id?.toString();
+    const isMatch = participantId === userId;
+    
+    console.log(`🔍 Comparando: ${participantId} === ${userId} ? ${isMatch}`);
+    return isMatch;
+  });
+
+  console.log('✅ Resultado final isParticipant:', isParticipant);
+  console.log('👥 Total participantes para mostrar:', event.participants.length);
+
   const progressPercentage = (event.currentProgress / event.targetGoal) * 100;
-  const isParticipant = event.participants.some(
-    p => getParticipantUserId(p) === user?._id
-  );
 
   return (
     <View style={styles.container}>
@@ -191,7 +266,8 @@ export default function EventDetailScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+    
+
         <View style={styles.card}>
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>Descripción</Text>
@@ -253,19 +329,22 @@ export default function EventDetailScreen() {
           {isParticipant && (
             <View style={styles.participationContainer}>
               <View style={styles.joinedBadge}>
-                <Text style={styles.joinedText}>Ya estás participando</Text>
+                <Text style={styles.joinedText}>✅ Ya estás participando</Text>
                 <Text style={styles.joinedDate}>
                   Te uniste el {new Date(event.participants.find(p => 
-                    getParticipantUserId(p) === user?._id
+                    getParticipantUserId(p) === user?._id?.toString()
                   )?.joinedAt || '').toLocaleDateString('es-ES')}
                 </Text>
               </View>
               
               <TouchableOpacity 
-                style={styles.leaveButton}
+                style={[styles.leaveButton, leaving && styles.leavingButton]}
                 onPress={handleLeaveEvent}
+                disabled={leaving}
               >
-                <Text style={styles.leaveButtonText}>Salir de la campaña</Text>
+                <Text style={styles.leaveButtonText}>
+                  {leaving ? 'Saliendo...' : 'Salir de la campaña'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -282,26 +361,28 @@ export default function EventDetailScreen() {
         <View style={styles.participantsSection}>
           <Text style={styles.sectionTitle}>👥 Participantes ({event.currentProgress})</Text>
           {event.participants.length > 0 ? (
-            event.participants.map((participant, index) => (
-              <View key={participant._id || index} style={styles.participantItem}>
-                <Text style={styles.participantName}>
-                  👤 {getParticipantUserName(participant)}
-                  {getParticipantUserId(participant) === user?._id && ' (Tú)'}
-                </Text>
-                <Text style={styles.participantDate}>
-                  Se unió el {new Date(participant.joinedAt).toLocaleDateString('es-ES')}
-                </Text>
-              </View>
-            ))
+            event.participants.map((participant, index) => {
+              const isCurrentUser = getParticipantUserId(participant) === user?._id?.toString();
+              return (
+                <View key={participant._id || index} style={styles.participantItem}>
+                  <Text style={styles.participantName}>
+                    👤 {getParticipantUserName(participant)}
+                    {isCurrentUser && ' (Tú)'}
+                  </Text>
+                  <Text style={styles.participantDate}>
+                    Se unió el {new Date(participant.joinedAt).toLocaleDateString('es-ES')}
+                  </Text>
+                </View>
+              );
+            })
           ) : (
             <Text style={styles.emptyText}>Aún no hay participantes. ¡Sé el primero!</Text>
           )}
         </View>
-      </ScrollView>
-    </View>
-  );
-}
 
+    </View>
+  
+)}
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   centerContainer: { 
@@ -313,10 +394,8 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 10, color: '#666' },
   errorTitle: { fontSize: 20, fontWeight: 'bold', color: '#FF3B30', marginBottom: 10 },
   errorText: { textAlign: 'center', color: '#666', marginBottom: 20 },
-  // Botón para pantalla de error (nuevo nombre)
   errorBackButton: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8 },
   errorBackButtonText: { color: 'white', fontWeight: 'bold' },
-  // Header
   header: { 
     backgroundColor: 'white', 
     padding: 15,
@@ -327,7 +406,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0'
   },
-  // Botón de retroceso en header (nuevo nombre)
   backButtonHeader: {
     padding: 10,
     marginRight: 10,
@@ -440,6 +518,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FF3B30'
+  },
+  leavingButton: {
+    opacity: 0.6
   },
   leaveButtonText: {
     color: '#FF3B30',

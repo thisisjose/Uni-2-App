@@ -108,4 +108,23 @@ async joinEvent(eventId: string): Promise<Event | null> {
     throw new Error(errorMessage);
     }
   }
+// Salirse de evento
+async leaveEvent(eventId: string): Promise<Event | null> {
+  try {
+    console.log('🚪 Saliendo del evento:', eventId);
+    const response = await api.post(`/events/${eventId}/leave`);
+    
+    if (response.data.success) {
+      return response.data.data;
+    } else {
+      throw new Error(response.data.message || 'Error saliéndose del evento');
+    }
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message;
+    console.error('❌ Error leaveEvent:', errorMessage);
+    throw new Error(errorMessage);
+  }
+}
+
+
 }

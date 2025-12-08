@@ -93,7 +93,7 @@ export default function CreateEventScreen() {
   try {
     const newEvent = await eventRepository.createEvent(eventData);
     if (newEvent) {
-      // LIMPIAR FORMULARIO
+      // LIMPIAR FORMULARIO PARA QUE EL ADMIN PUEDA CREAR OTRO EVENTO SI SE LE DA LA GANA XDDDDD
       setTitle('');
       setDescription('');
       setDate(new Date());
@@ -108,7 +108,7 @@ export default function CreateEventScreen() {
         [
           {
             text: 'OK',
-            onPress: () => router.replace('/event/list') // REDIRIGIR A LISTA
+            onPress: () => router.replace('/event/list') // ESTE TE REDIRIGE A LA LIST DE EVENTOS XD
           }
         ]
       );
