@@ -2,13 +2,13 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { EventCategory } from '../../core/models/Event';
 import { EventRepository } from '../../core/repositories/EventRepository';
@@ -218,7 +218,7 @@ export default function CreateEventScreen() {
           [
             {
               text: 'OK',
-              onPress: () => router.replace('/event/list')
+              onPress: () => router.replace('/(tabs)')
             }
           ]
         );

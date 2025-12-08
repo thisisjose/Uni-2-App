@@ -1,14 +1,21 @@
 // app/login.tsx
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
   const router = useRouter();
+
+  // Verificar si ya hay sesión al cargar
+  useEffect(() => {
+    if (user) {
+      router.replace('/(tabs)');
+    }
+  }, [user]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -16,10 +23,17 @@ export default function LoginScreen() {
       return;
     }
 
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Por favor ingresa un email válido (ej: usuario@ejemplo.com)');
+      return;
+    }
+
     const result = await login(email, password);
     
     if (result.success) {
-      router.replace('/event/list');
+      router.replace('/(tabs)');
     } else {
       Alert.alert('Error', result.message || 'Credenciales incorrectas');
     }

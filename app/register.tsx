@@ -19,6 +19,13 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Por favor ingresa un email válido (ej: usuario@ejemplo.com)');
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
@@ -33,7 +40,7 @@ export default function RegisterScreen() {
 
       if (result.success) {
         // Redirige automáticamente sin alert
-        router.replace('/event/list');
+        router.replace('/(tabs)');
       } else {
         Alert.alert('Error', result.message || 'Error en el registro');
       }

@@ -16,28 +16,38 @@ export const useAuth = () => {
   const checkAuth = async () => {
     try {
       setLoading(true);
+      setError(null);
       const result = await userRepository.checkAuth();
-      if (result.success) {
+      if (result.success && result.user) {
         setUser(result.user);
+      } else {
+        setUser(null);
       }
     } catch (err: any) {
-      setError(err.message);
+      console.error('🔴 useAuth checkAuth error:', err);
+      setError(err.message || 'Error en autenticación');
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
 const login = async (email: string, password: string) => {
-  const result = await userRepository.login({ email, password });
-  if (result.success && result.user) {
-    const normalizedUser = {
-      ...result.user,
-      _id: result.user._id || result.user.id,
-      id: result.user.id || result.user._id
-    };
-    setUser(normalizedUser);
+  try {
+    const result = await userRepository.login({ email, password });
+    if (result.success && result.user) {
+      const normalizedUser = {
+        ...result.user,
+        _id: result.user._id || result.user.id,
+        id: result.user.id || result.user._id
+      };
+      setUser(normalizedUser);
+    }
+    return result;
+  } catch (err: any) {
+    console.error('🔴 Login error:', err);
+    return { success: false, message: err.message || 'Error de login' };
   }
-  return result;
 };
 
   const register = async (name: string, email: string, password: string, role: string = 'user') => {
@@ -55,7 +65,7 @@ const login = async (email: string, password: string) => {
       role: validRole  // Ahora sí es UserRole
     });
     
-    if (result.success) {
+    if (result.success && result.user) {
       setUser(result.user);
       return { success: true, user: result.user };
     } else {
@@ -63,8 +73,9 @@ const login = async (email: string, password: string) => {
       return { success: false, message: result.message };
     }
   } catch (err: any) {
-    setError(err.message);
-    return { success: false, message: err.message };
+    console.error('🔴 Register error:', err);
+    setError(err.message || 'Error en registro');
+    return { success: false, message: err.message || 'Error en registro' };
   } finally {
     setLoading(false);
   }
@@ -72,12 +83,23 @@ const login = async (email: string, password: string) => {
 
 
   const logout = async () => {
-    await userRepository.logout();
-    setUser(null);
+    try {
+      await userRepository.logout();
+      setUser(null);
+      setError(null);
+    } catch (err: any) {
+      console.error('🔴 Logout error:', err);
+      setError(err.message);
+    }
   };
 
   const isAdmin = async (): Promise<boolean> => {
-    return await userRepository.isAdmin();
+    try {
+      return await userRepository.isAdmin();
+    } catch (err) {
+      console.error('🔴 isAdmin error:', err);
+      return false;
+    }
   };
 
   return {
