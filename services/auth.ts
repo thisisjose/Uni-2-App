@@ -5,6 +5,11 @@ import api from './api';
 const normalizeUser = (user: any) => {
   if (!user) return user;
   
+  // If user has a nested user object, extract it first
+  if (user.user && typeof user.user === 'object') {
+    user = user.user;
+  }
+  
   return {
     ...user,
     _id: user._id || user.id,  // Asegurar _id
@@ -43,12 +48,19 @@ export const authService = {
   // Registro
   register: async (userData: any) => {
     try {
-      console.log('📝 Register attempt:', userData.email);
+      console.log('📝 Register attempt:', userData.email, 'role:', userData.role);
       const response = await api.post('/auth/register', userData);
       const { token, user } = response.data.data;
       
       // Normalizar user antes de guardar
       const normalizedUser = normalizeUser(user);
+      console.log('✅ Register success - Raw user from server:', {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        _id: user._id,
+        id: user.id
+      });
       console.log('✅ Register success - User normalized:', normalizedUser);
       
       await AsyncStorage.setItem('userToken', token);
@@ -90,5 +102,37 @@ export const authService = {
     }
     console.log('🔍 checkAuth - No session found');
     return { success: false };
+  }
+  ,
+  // Obtener perfil actualizado (attendedCount, role, active, etc.)
+  getProfile: async () => {
+    try {
+      console.log('🔄 Fetching profile from /auth/profile...');
+      const response = await api.get('/auth/profile');
+      
+      // Handle both response structures:
+      // Structure 1: response.data.data = { name, email, role, ... }
+      // Structure 2: response.data.data = { user: { name, email, role, ... } }
+      let user = response.data.data;
+      if (user.user && !user.name) {
+        user = user.user;  // Extract from nested user object
+      }
+      
+      console.log('✅ getProfile response - Raw user:', {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        _id: user._id,
+        id: user.id
+      });
+      const normalizedUser = normalizeUser(user);
+      // Guardar versión actualizada en storage
+      await AsyncStorage.setItem('userData', JSON.stringify(normalizedUser));
+      console.log('✅ getProfile - Normalized and saved:', normalizedUser);
+      return { success: true, user: normalizedUser };
+    } catch (error: any) {
+      console.error('❌ getProfile error:', error.response?.data || error.message);
+      return { success: false, message: error.response?.data?.message || 'Error fetching profile' };
+    }
   }
 };

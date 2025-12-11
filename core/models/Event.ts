@@ -2,11 +2,10 @@ export type EventStatus = 'active' | 'completed' | 'cancelled';
 export type EventCategory = 'food' | 'clothes' | 'books' | 'toys' | 'medical' | 'other';
 
 export interface Participant {
-  userId: {
-    _id: string;
-    name: string;
-  };
+  // backend sometimes returns userId as a string or as populated object
+  userId: string | { _id: string; name?: string };
   _id: string;
+  id?: string;
   joinedAt: string;
 }
 
@@ -23,6 +22,7 @@ export interface Event {
   status: EventStatus;
   createdBy: string | { _id: string; name: string; email: string };
   participants: Participant[];
+  id?: string;
   createdAt: string;
   updatedAt: string;
 }

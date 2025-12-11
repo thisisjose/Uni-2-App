@@ -38,7 +38,17 @@ const EventCard: React.FC<Props> = ({ event, onPress }) => {
       </View>
       
       <View style={styles.infoRow}>
-        <Text style={styles.infoText}>👤 {event.organizer}</Text>
+        <Text style={styles.infoText}>
+          👤 {(() => {
+            // Prefer createdBy object if available (may include email)
+            if (event.createdBy && typeof event.createdBy === 'object') {
+              const name = event.createdBy.name || event.organizer || '';
+              const email = (event.createdBy as any).email;
+              return `${name}${email ? ' - ' + email : ''}`;
+            }
+            return event.organizer;
+          })()}
+        </Text>
         <Text style={styles.infoText}>{getCategoryLabel(event.category)}</Text>
       </View>
       

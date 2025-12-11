@@ -1,11 +1,13 @@
-export type UserRole = 'user' | 'admin';
+export type UserRole = 'user' | 'organizer' | 'admin';
 
 export interface User {
   _id: string;
-  id?: string;  // ← Agregar opcional
+  id?: string;
   name: string;
   email: string;
   role: UserRole;
+  active?: boolean;
+  attendedCount?: number;
   createdAt?: string;
 }
 

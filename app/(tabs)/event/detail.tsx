@@ -1,13 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { Event, EventStatus } from '../../../core/models/Event';
 import { EventRepository } from '../../../core/repositories/EventRepository';
@@ -25,6 +26,48 @@ export default function EventDetailScreen() {
   const router = useRouter();
 
   const eventRepository = new EventRepository();
+
+  const getLocalJoined = async (userId?: string): Promise<string[]> => {
+    try {
+      if (!userId) return [];
+      const key = `joinedEvents:${userId}`;
+      const raw = await AsyncStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.warn('Could not read joinedEvents', e);
+      return [];
+    }
+  };
+
+  const addLocalJoined = async (eventId: string) => {
+    try {
+      const uid = user?._id || user?.id;
+      if (!uid) return;
+      const key = `joinedEvents:${uid}`;
+      const raw = await AsyncStorage.getItem(key);
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(eventId)) {
+        list.push(eventId);
+        await AsyncStorage.setItem(key, JSON.stringify(list));
+      }
+    } catch (e) {
+      console.warn('Could not add joined event', e);
+    }
+  };
+
+  const removeLocalJoined = async (eventId: string) => {
+    try {
+      const uid = user?._id || user?.id;
+      if (!uid) return;
+      const key = `joinedEvents:${uid}`;
+      const raw = await AsyncStorage.getItem(key);
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      const filtered = list.filter(id => id !== eventId);
+      await AsyncStorage.setItem(key, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn('Could not remove joined event', e);
+    }
+  };
 
   // Función para obtener el ID del usuario de un participante
   const getParticipantUserId = (participant: any): string => {
@@ -56,6 +99,19 @@ export default function EventDetailScreen() {
     }
   }, [id]);
 
+  // Local joined events state (moved here so hooks run unconditionally)
+  const [localJoinedList, setLocalJoinedList] = useState<string[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const uid = user?._id || user?.id;
+      const raw = await getLocalJoined(uid?.toString());
+      if (mounted) setLocalJoinedList(raw);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const loadEvent = async () => {
     if (!id) return;
     
@@ -70,11 +126,11 @@ export default function EventDetailScreen() {
         console.log('🔍 DEBUG Event cargado:');
         console.log('📱 Usuario ID:', user?._id);
         console.log('🎯 Evento ID:', eventData._id);
-        console.log('👥 Total participantes:', eventData.participants.length);
-        
-        if (eventData.participants.length > 0) {
+        console.log('👥 Total participantes:', (eventData.participants || []).length);
+
+        if ((eventData.participants || []).length > 0) {
           console.log('📊 Lista de participantes:');
-          eventData.participants.forEach((p, i) => {
+          (eventData.participants || []).forEach((p, i) => {
             const pId = getParticipantUserId(p);
             console.log(`   ${i}: ID=${pId}, Nombre=${getParticipantUserName(p)}`);
           });
@@ -94,7 +150,7 @@ export default function EventDetailScreen() {
     if (!id || !event || !user) return;
     
     // Verificar en frontend primero
-    const isAlreadyParticipant = event.participants.some(
+    const isAlreadyParticipant = (event.participants || []).some(
       p => getParticipantUserId(p) === user._id?.toString()
     );
     
@@ -112,13 +168,16 @@ export default function EventDetailScreen() {
       const updatedEvent = await eventRepository.joinEvent(id as string);
       if (updatedEvent) {
         setEvent(updatedEvent);
+        // persist locally as fallback when backend doesn't return participants
+        await addLocalJoined(id as string);
         // Sin alert, solo se actualiza la UI
       }
     } catch (error: any) {
       // Manejar específicamente el error de "ya participas"
       if (error.message.includes('Ya estás participando')) {
         Alert.alert('Ya participas', 'Ya estás en esta campaña');
-        // Recargar el evento para sincronizar estado
+        // Marcar localmente como unido (fallback) y recargar el evento
+        await addLocalJoined(id as string);
         loadEvent();
       } else {
         Alert.alert('Error', error.message || 'Error al unirse');
@@ -132,7 +191,7 @@ export default function EventDetailScreen() {
     if (!id || !event || !user) return;
     
     // Verificar que realmente está participando
-    const isParticipant = event.participants.some(
+    const isParticipant = (event.participants || []).some(
       p => getParticipantUserId(p) === user._id?.toString()
     );
     
@@ -159,6 +218,8 @@ export default function EventDetailScreen() {
               const updatedEvent = await eventRepository.leaveEvent(id as string);
               if (updatedEvent) {
                 setEvent(updatedEvent);
+                    // remove local fallback
+                    await removeLocalJoined(id as string);
                 Alert.alert(
                   'Te has salido',
                   'Has dejado de participar en esta campaña',
@@ -168,7 +229,9 @@ export default function EventDetailScreen() {
             } catch (error: any) {
               if (error.message.includes('No estás participando')) {
                 Alert.alert('No participas', 'No estás en esta campaña');
-                loadEvent();
+                    // ensure local state is consistent
+                    await removeLocalJoined(id as string);
+                    loadEvent();
               } else {
                 Alert.alert('Error', error.message || 'No se pudo salir de la campaña');
               }
@@ -182,8 +245,22 @@ export default function EventDetailScreen() {
   };
 
   const handleChangeStatus = async (newStatus: EventStatus) => {
-    if (!id || !event || !user || user.role !== 'admin') return;
-    
+    if (!id || !event || !user) return;
+
+    // Solo el organizador que creó el evento puede cambiar su estado
+    const isCreatorLocal = (() => {
+      if (!event.createdBy) return false;
+      if (typeof event.createdBy === 'object') {
+        const cb: any = event.createdBy;
+        const cbId = (cb._id ?? cb.id) as string | undefined;
+        return cbId === (user._id || user.id);
+      }
+      const cbId = event.createdBy as string;
+      return cbId === (user._id || user.id);
+    })();
+
+    if (user.role !== 'organizer' || !isCreatorLocal) return;
+
     Alert.alert(
       'Cambiar estado',
       `¿Cambiar estado a "${getStatusLabel(newStatus)}"?`,
@@ -215,8 +292,22 @@ export default function EventDetailScreen() {
   };
 
   const handleDeleteEvent = async () => {
-    if (!id || !user || user.role !== 'admin') return;
-    
+    if (!id || !user || !event) return;
+
+    // Solo el organizador creador puede eliminar su evento
+    const isCreatorLocal = (() => {
+      if (!event.createdBy) return false;
+      if (typeof event.createdBy === 'object') {
+        const cb: any = event.createdBy;
+        const cbId = (cb._id ?? cb.id) as string | undefined;
+        return cbId === (user._id || user.id);
+      }
+      const cbId = event.createdBy as string;
+      return cbId === (user._id || user.id);
+    })();
+
+    if (user.role !== 'organizer' || !isCreatorLocal) return;
+
     Alert.alert(
       'Eliminar campaña',
       '¿Estás seguro de que deseas eliminar esta campaña? Esta acción no se puede deshacer.',
@@ -314,17 +405,40 @@ export default function EventDetailScreen() {
   }
 
   // Verificación MEJORADA de isParticipant
-  const isParticipant = event.participants.some(p => {
-    const participantId = getParticipantUserId(p);
-    const userId = user?._id?.toString();
-    const isMatch = participantId === userId;
-    
-    console.log(`🔍 Comparando: ${participantId} === ${userId} ? ${isMatch}`);
-    return isMatch;
-  });
+  const isCreator = (() => {
+    if (!user) return false;
+    if (!event) return false;
+    if (!event.createdBy) return false;
+    if (typeof event.createdBy === 'object') {
+      // createdBy may be { _id, name, email } or may include id; use safe access
+      const cb: any = event.createdBy;
+      const cbId = (cb._id ?? cb.id) as string | undefined;
+      return cbId === (user._id || user.id);
+    }
+    const cbId = event.createdBy as string;
+    return cbId === (user._id || user.id);
+  })();
+
+  const isParticipant = (() => {
+    // If the user is the creator, treat them as NOT a participant for UI actions (no "Salir")
+    if (isCreator) return false;
+
+    const byParticipants = (event.participants || []).some(p => {
+      const participantId = getParticipantUserId(p);
+      const userId = user?._id?.toString();
+      const isMatch = participantId === userId;
+      console.log(`🔍 Comparando participante: ${participantId} === ${userId} ? ${isMatch}`);
+      return isMatch;
+    });
+    if (byParticipants) return true;
+    // fallback: if our local joined list contains this event id
+    const eid = event._id || event.id;
+    if (eid && localJoinedList.includes(eid)) return true;
+    return false;
+  })();
 
   console.log('✅ Resultado final isParticipant:', isParticipant);
-  console.log('👥 Total participantes para mostrar:', event.participants.length);
+  console.log('👥 Total participantes para mostrar:', (event.participants || []).length);
 
   const progressPercentage = (event.currentProgress / event.targetGoal) * 100;
 
@@ -394,7 +508,7 @@ export default function EventDetailScreen() {
             </View>
           </View>
 
-          {event.status === 'active' && !isParticipant && (
+          {event.status === 'active' && !isParticipant && user?.role === 'user' && (
             <TouchableOpacity 
               style={styles.joinButton}
               onPress={handleJoinEvent}
@@ -411,9 +525,9 @@ export default function EventDetailScreen() {
               <View style={styles.joinedBadge}>
                 <Text style={styles.joinedText}>Ya estás participando</Text>
                 <Text style={styles.joinedDate}>
-                  Te uniste el {new Date(event.participants.find(p => 
+                  Te uniste el {new Date(((event.participants || []).find(p => 
                     getParticipantUserId(p) === user?._id?.toString()
-                  )?.joinedAt || '').toLocaleDateString('es-ES')}
+                  )?.joinedAt) || '').toLocaleDateString('es-ES')}
                 </Text>
               </View>
               
@@ -437,9 +551,9 @@ export default function EventDetailScreen() {
             </View>
           )}
 
-          {user?.role === 'admin' && (
+          {(user?.role === 'organizer' && isCreator) && (
             <View style={styles.adminControlsSection}>
-              <Text style={styles.adminControlsTitle}>🔧 Controles de Administrador</Text>
+              <Text style={styles.adminControlsTitle}>🔧 Controles del Organizador</Text>
               <View style={styles.statusButtonsContainer}>
                 <TouchableOpacity
                   style={[
@@ -502,23 +616,60 @@ export default function EventDetailScreen() {
 
         <View style={styles.participantsSection}>
           <Text style={styles.sectionTitle}>👥 Participantes ({event.currentProgress})</Text>
-          {event.participants.length > 0 ? (
-            event.participants.map((participant, index) => {
-              const isCurrentUser = getParticipantUserId(participant) === user?._id?.toString();
-              return (
-                <View key={participant._id || index} style={styles.participantItem}>
-                  <Text style={styles.participantName}>
-                    👤 {getParticipantUserName(participant)}
-                    {isCurrentUser && ' (Tú)'}
-                  </Text>
-                  <Text style={styles.participantDate}>
-                    Se unió el {new Date(participant.joinedAt).toLocaleDateString('es-ES')}
-                  </Text>
-                </View>
-              );
-            })
+          {/* Mostrar participantes solo al organizador creador del evento */}
+          {(
+            (user?.role === 'organizer' && (
+              typeof event.createdBy === 'object' ? event.createdBy._id === user?._id : event.createdBy === user?._id
+            ))
+          ) ? (
+            (event.participants || []).length > 0 ? (
+              (event.participants || []).map((participant, index) => {
+                const isCurrentUser = getParticipantUserId(participant) === user?._id?.toString();
+                return (
+                  <View key={participant._id || index} style={styles.participantItem}>
+                    <Text style={styles.participantName}>
+                      👤 {getParticipantUserName(participant)}
+                      {isCurrentUser && ' (Tú)'}
+                    </Text>
+                    <Text style={styles.participantDate}>
+                      Se unió el {new Date(participant.joinedAt).toLocaleDateString('es-ES')}
+                    </Text>
+                    {/* Si es el organizador, permitir marcar asistencia */}
+                    {user?.role === 'organizer' && (
+                      <TouchableOpacity
+                        style={styles.attendanceButton}
+                        onPress={async () => {
+                          try {
+                            // Use participant document _id (the participant record id), not userId
+                            const participantRecordId = (participant && (participant._id || participant.id)) || null;
+                            if (!participantRecordId) {
+                              Alert.alert('Error', 'ID de participante no disponible');
+                              return;
+                            }
+                            const success = await eventRepository.updateParticipantAttendance(event._id, participantRecordId, true);
+                            if (success) {
+                              Alert.alert('Asistencia marcada', 'Asistencia registrada correctamente');
+                              loadEvent();
+                            } else {
+                              Alert.alert('Error', 'No se pudo actualizar la asistencia');
+                            }
+                          } catch (err: any) {
+                            console.error('Error updating participant attendance:', err?.response?.data || err?.message || err);
+                            Alert.alert('Error', err?.response?.data?.message || err?.message || 'No se pudo actualizar la asistencia');
+                          }
+                        }}
+                      >
+                        <Text style={styles.attendanceText}>Marcar asistencia</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.emptyText}>Aún no hay participantes. ¡Sé el primero!</Text>
+            )
           ) : (
-            <Text style={styles.emptyText}>Aún no hay participantes. ¡Sé el primero!</Text>
+            <Text style={styles.emptyText}>Los participantes solo son visibles para organizadores y administradores.</Text>
           )}
         </View>
       </ScrollView>
@@ -714,6 +865,15 @@ const styles = StyleSheet.create({
   },
   participantName: { fontSize: 14, fontWeight: '600', color: '#1A2B3D' },
   participantDate: { fontSize: 12, color: '#4A5F7F', marginTop: 4, fontWeight: '400' },
+  attendanceButton: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#0B63D6',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8
+  },
+  attendanceText: { color: 'white', fontWeight: '700' },
   emptyText: { 
     textAlign: 'center', 
     color: '#9BB7DB', 

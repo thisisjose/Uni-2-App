@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -36,33 +36,17 @@ export default function AdminScreen() {
       <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.cardIcon}>
-            <Text style={styles.iconText}>➕</Text>
+            <Text style={styles.iconText}>👥</Text>
           </View>
-          <Text style={styles.cardTitle}>Crear Nueva Campaña</Text>
+          <Text style={styles.cardTitle}>Gestión de Usuarios</Text>
           <Text style={styles.cardDescription}>
-            Agrega una nueva campaña solidaria para que los voluntarios puedan unirse.
-          </Text>
-          <TouchableOpacity 
-            style={styles.cardButton}
-            onPress={() => router.push('/admin/create-event')}
-          >
-            <Text style={styles.cardButtonText}>Crear Campaña</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardIcon}>
-            <Text style={styles.iconText}>📊</Text>
-          </View>
-          <Text style={styles.cardTitle}>Ver Estadísticas</Text>
-          <Text style={styles.cardDescription}>
-            Revisa el progreso y estado de todas tus campañas.
+            Revisa y administra los usuarios: asigna roles y activa/desactiva cuentas.
           </Text>
           <TouchableOpacity 
             style={[styles.cardButton, styles.cardButtonSecondary]}
-            onPress={() => router.push('/')}
+            onPress={() => router.push('/admin-users' as any)}
           >
-            <Text style={styles.cardButtonTextSecondary}>Ver Campañas</Text>
+            <Text style={styles.cardButtonTextSecondary}>Gestionar Usuarios</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { Event, EventStatus } from '../../core/models/Event';
 import { EventRepository } from '../../core/repositories/EventRepository';
@@ -69,11 +69,11 @@ export default function EventDetailScreen() {
         console.log('🔍 DEBUG Event cargado:');
         console.log('📱 Usuario ID:', user?._id);
         console.log('🎯 Evento ID:', eventData._id);
-        console.log('👥 Total participantes:', eventData.participants.length);
-        
-        if (eventData.participants.length > 0) {
+        console.log('👥 Total participantes:', (eventData.participants || []).length);
+
+        if ((eventData.participants || []).length > 0) {
           console.log('📊 Lista de participantes:');
-          eventData.participants.forEach((p, i) => {
+          (eventData.participants || []).forEach((p, i) => {
             const pId = getParticipantUserId(p);
             console.log(`   ${i}: ID=${pId}, Nombre=${getParticipantUserName(p)}`);
           });
@@ -93,7 +93,7 @@ export default function EventDetailScreen() {
     if (!id || !event || !user) return;
     
     // Verificar en frontend primero
-    const isAlreadyParticipant = event.participants.some(
+    const isAlreadyParticipant = (event.participants || []).some(
       p => getParticipantUserId(p) === user._id?.toString()
     );
     
@@ -131,7 +131,7 @@ export default function EventDetailScreen() {
     if (!id || !event || !user) return;
     
     // Verificar que realmente está participando
-    const isParticipant = event.participants.some(
+    const isParticipant = (event.participants || []).some(
       p => getParticipantUserId(p) === user._id?.toString()
     );
     
@@ -287,7 +287,7 @@ export default function EventDetailScreen() {
   });
 
   console.log('✅ Resultado final isParticipant:', isParticipant);
-  console.log('👥 Total participantes para mostrar:', event.participants.length);
+  console.log('👥 Total participantes para mostrar:', (event.participants || []).length);
 
   const progressPercentage = (event.currentProgress / event.targetGoal) * 100;
 
@@ -374,9 +374,9 @@ export default function EventDetailScreen() {
               <View style={styles.joinedBadge}>
                 <Text style={styles.joinedText}>Ya estás participando</Text>
                 <Text style={styles.joinedDate}>
-                  Te uniste el {new Date(event.participants.find(p => 
+                  Te uniste el {new Date(((event.participants || []).find(p => 
                     getParticipantUserId(p) === user?._id?.toString()
-                  )?.joinedAt || '').toLocaleDateString('es-ES')}
+                  )?.joinedAt) || '').toLocaleDateString('es-ES')}
                 </Text>
               </View>
               
@@ -455,8 +455,8 @@ export default function EventDetailScreen() {
 
         <View style={styles.participantsSection}>
           <Text style={styles.sectionTitle}>👥 Participantes ({event.currentProgress})</Text>
-          {event.participants.length > 0 ? (
-            event.participants.map((participant, index) => {
+          {(event.participants || []).length > 0 ? (
+            (event.participants || []).map((participant, index) => {
               const isCurrentUser = getParticipantUserId(participant) === user?._id?.toString();
               return (
                 <View key={participant._id || index} style={styles.participantItem}>

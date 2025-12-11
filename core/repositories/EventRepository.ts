@@ -2,11 +2,25 @@ import api from '../../services/api';
 import { CreateEventData, Event, EventStatus } from '../models/Event';
 
 export class EventRepository {
+  private normalizeEvent(raw: any): Event {
+    if (!raw) return raw;
+    const normalized: any = {
+      ...raw,
+      _id: raw._id || raw.id,
+      id: raw.id || raw._id,
+      participants: raw.participants || [],
+      currentProgress: raw.currentProgress ?? raw.participantsCount ?? 0,
+      targetGoal: raw.targetGoal ?? 0,
+      organizer: raw.organizer || (raw.createdBy && typeof raw.createdBy === 'object' ? raw.createdBy.name : raw.organizer) || '',
+    };
+    return normalized as Event;
+  }
   // Obtener todos los eventos
   async getAllEvents(): Promise<Event[]> {
     try {
       const response = await api.get('/events');
-      return response.data.data;
+      const list = response.data.data || [];
+      return list.map((r: any) => this.normalizeEvent(r));
     } catch (error) {
       console.error('Error fetching events:', error);
       return [];
@@ -23,7 +37,8 @@ async getEventById(id: string): Promise<Event | null> {
     
     // Verifica la estructura de la respuesta
     if (response.data.success && response.data.data) {
-      return response.data.data;
+      const raw = response.data.data;
+      return this.normalizeEvent(raw);
     } else {
       console.warn('⚠️ Repository: Estructura inesperada:', response.data);
       return null;
@@ -46,7 +61,7 @@ async getEventById(id: string): Promise<Event | null> {
     
     if (response.data.success) {
       console.log('✅ Evento creado:', response.data.data);
-      return response.data.data;
+      return this.normalizeEvent(response.data.data);
     } else {
       throw new Error(response.data.message || 'Error creando evento');
     }
@@ -66,7 +81,7 @@ async joinEvent(eventId: string): Promise<Event | null> {
     const response = await api.post(`/events/${eventId}/join`);
     
     if (response.data.success) {
-      return response.data.data;
+      return this.normalizeEvent(response.data.data);
     } else {
       // Lanzar error con el mensaje del servidor
       throw new Error(response.data.message || 'Error uniéndose al evento');
@@ -83,7 +98,7 @@ async joinEvent(eventId: string): Promise<Event | null> {
   async updateEvent(id: string, eventData: Partial<CreateEventData>): Promise<Event | null> {
     try {
       const response = await api.put(`/events/${id}`, eventData);
-      return response.data.data;
+      return this.normalizeEvent(response.data.data);
     } catch (error) {
       console.error('Error updating event:', error);
       return null;
@@ -115,7 +130,7 @@ async leaveEvent(eventId: string): Promise<Event | null> {
     const response = await api.post(`/events/${eventId}/leave`);
     
     if (response.data.success) {
-      return response.data.data;
+      return this.normalizeEvent(response.data.data);
     } else {
       throw new Error(response.data.message || 'Error saliéndose del evento');
     }
@@ -144,5 +159,55 @@ async updateEventStatus(id: string, status: EventStatus): Promise<Event | null> 
     throw new Error(errorMessage);
   }
 }
+  // Obtener eventos creados por el organizador actual
+  // Obtener eventos creados por el organizador actual
+  // Si se proporciona `userId`, filtra para devolver solo eventos creados por ese usuario.
+  async getMyEvents(userId?: string): Promise<Event[]> {
+    try {
+      const response = await api.get('/events/mine');
+      const list = response.data.data || [];
+      const normalized = list.map((r: any) => this.normalizeEvent(r));
+      if (userId) {
+        return normalized.filter((e: any) => {
+          if (!e.createdBy) return false;
+          const cb = e.createdBy;
+          const cbId = typeof cb === 'object' ? (cb._id || cb.id) : cb;
+          return cbId === userId;
+        });
+      }
+      return normalized;
+    } catch (error: any) {
+      console.error('Error fetching my events (primary):', error.response?.data || error.message);
+      // Fallback: try to fetch all events and filter by createdBy matching provided userId
+      try {
+        const allResp = await api.get('/events');
+        const all = allResp.data.data || [];
+        const normalized = all.map((r: any) => this.normalizeEvent(r));
+        if (userId) {
+          return normalized.filter((e: any) => {
+            if (!e.createdBy) return false;
+            const cb = e.createdBy;
+            const cbId = typeof cb === 'object' ? (cb._id || cb.id) : cb;
+            return cbId === userId;
+          });
+        }
+        return normalized;
+      } catch (err) {
+        console.error('Fallback getAllEvents failed:', err);
+        return [];
+      }
+    }
+  }
+
+  // Actualizar asistencia/estado de participante (organizer)
+  async updateParticipantAttendance(eventId: string, participantId: string, attended: boolean): Promise<boolean> {
+    try {
+      const response = await api.patch(`/events/${eventId}/participants/${participantId}/attendance`, { attended });
+      return response.data.success;
+    } catch (error: any) {
+      console.error('Error updating participant attendance:', error.response?.data || error.message);
+      return false;
+    }
+  }
 
 }

@@ -4,7 +4,9 @@ import { Image } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  console.log('📱 TabsLayout render - user.role:', user?.role, 'loading:', loading);
 
   return (
     <Tabs
@@ -46,26 +48,44 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* SOCIAL - Mis campañas */}
-      <Tabs.Screen
-        name="social"
-        options={{
-          title: 'Mis Campañas',
-          tabBarIcon: ({ color }) => (
-            <Image
-              source={require('../../assets/icons/social.png')}
-              style={{ width: 24, height: 24, tintColor: color }}
-            />
-          ),
-        }}
-      />
+      {/* SOCIAL - Mis campañas (solo voluntarios / users) */}
+      {!loading && user?.role === 'user' && (
+        <Tabs.Screen
+          name="social"
+          options={{
+            title: 'Mis Campañas',
+            tabBarIcon: ({ color }) => (
+              <Image
+                source={require('../../assets/icons/social.png')}
+                style={{ width: 24, height: 24, tintColor: color }}
+              />
+            ),
+          }}
+        />
+      )}
+
+      {/* MY EVENTS - Solo para organizadores */}
+      {!loading && user?.role === 'organizer' && (
+        <Tabs.Screen
+          name="my-events"
+          options={{
+            title: 'Mis Eventos',
+            tabBarIcon: ({ color }) => (
+              <Image
+                source={require('../../assets/icons/list.png')}
+                style={{ width: 24, height: 24, tintColor: color }}
+              />
+            ),
+          }}
+        />
+      )}
 
       {/* ADMIN - Solo para admins */}
-      {user?.role === 'admin' && (
+      {!loading && user?.role === 'admin' && (
         <Tabs.Screen
           name="admin"
           options={{
-            title: 'Crear',
+            title: 'Admin',
             tabBarIcon: ({ color }) => (
               <Image
                 source={require('../../assets/icons/plus.png')}

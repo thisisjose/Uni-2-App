@@ -1,17 +1,36 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
+
+  // Log user state for debugging
+  console.log('👤 ProfileScreen rendered - user:', {
+    name: user?.name,
+    email: user?.email,
+    role: user?.role,
+    attendedCount: user?.attendedCount,
+    _id: user?._id,
+    id: user?.id
+  });
+
+  // Refresh profile when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('👤 Profile screen focused - refreshing profile...');
+      refreshProfile();
+    }, [])
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -40,8 +59,8 @@ export default function ProfileScreen() {
             <Text style={[styles.nameLabel, { marginTop: 20 }]}>Rol</Text>
             <View style={styles.roleContainer}>
               <Text style={[styles.roleValue, user?.role === 'admin' && styles.adminRole]}>
-                {user?.role === 'admin' ? 'Administrador' : '👥 Voluntario'}
-              </Text>
+                  {user?.role === 'admin' ? 'Administrador' : (user?.role === 'organizer' ? 'Organizador' : '👥 Voluntario')}
+                </Text>
             </View>
           </View>
         </View>
@@ -67,7 +86,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.statContent}>
               <Text style={styles.statLabel}>Campañas Completadas</Text>
-              <Text style={styles.statValue}>Próximamente</Text>
+              <Text style={styles.statValue}>{user?.attendedCount ?? 'Próximamente'}</Text>
             </View>
           </View>
 

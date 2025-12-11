@@ -74,14 +74,24 @@ export default function EventsScreen() {
         onPress={() => handleEventPress(item._id)}
       />
       
-      {user?.role === 'admin' && (
-        <TouchableOpacity 
-          style={styles.deleteButton}
-          onPress={() => handleDeleteEvent(item._id)}
-        >
-          <Text style={styles.deleteButtonText}>Eliminar</Text>
-        </TouchableOpacity>
-      )}
+      {user?.role === 'organizer' && (() => {
+        // Mostrar botón eliminar solo si el organizador creó este evento
+        const cb = item.createdBy;
+        let cbId: string | undefined;
+        if (cb) {
+          if (typeof cb === 'object') cbId = cb._id || cb.id;
+          else cbId = cb;
+        }
+        const isCreator = cbId && (cbId === (user._id || user.id));
+        return isCreator ? (
+          <TouchableOpacity 
+            style={styles.deleteButton}
+            onPress={() => handleDeleteEvent(item._id)}
+          >
+            <Text style={styles.deleteButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        ) : null;
+      })()}
     </View>
   );
 
@@ -93,7 +103,7 @@ export default function EventsScreen() {
           <View>
             <Text style={styles.welcome}>Hola, {user?.name}</Text>
             <Text style={styles.roleText}>
-              {user?.role === 'admin' ? 'Eres Administrador' : 'Eres Voluntario'}
+                {user?.role === 'admin' ? 'Eres Administrador' : (user?.role === 'organizer' ? 'Eres Organizador' : 'Eres Voluntario')}
             </Text>
           </View>
           <TouchableOpacity onPress={handleLogout}>
@@ -114,7 +124,7 @@ export default function EventsScreen() {
       {loading && events.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text>Cargando campañas...</Text>
-          <Text style={styles.debugText}>Consultando API: https://uni-2-api.onrender.com</Text>
+          <Text style={styles.debugText}>Consultando API: https://uni-2-api.onrender.com/api</Text>
         </View>
       ) : error ? (
         <View style={styles.centerContainer}>
@@ -140,7 +150,7 @@ export default function EventsScreen() {
         <FlatList
           data={events}
           renderItem={renderItem}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item.id || item._id}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

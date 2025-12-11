@@ -1,12 +1,13 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import EventCard from '../../components/EventCard';
 import { Event } from '../../core/models/Event';
@@ -20,19 +21,83 @@ export default function SocialScreen() {
   const { user } = useAuth();
   const eventRepository = new EventRepository();
 
+  const getLocalJoined = async (userId?: string | undefined): Promise<string[]> => {
+    try {
+      if (!userId) return [];
+      const key = `joinedEvents:${userId}`;
+      const raw = await AsyncStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.warn('[social] could not read joinedEvents', e);
+      return [];
+    }
+  };
+
   // Cargar solo eventos a los que estoy unido
   const loadMyEvents = useCallback(async () => {
     try {
+      // Don't load 'joined campaigns' for organizers or admins — this screen is for volunteers
+      if (user?.role && user.role !== 'user') {
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const allEvents = await eventRepository.getAllEvents();
       
       if (allEvents) {
+        // Ensure events that report participantsCount but don't include participants
+        // are fetched in full so we can inspect participants.
+        const populatedEvents = await Promise.all(allEvents.map(async (event) => {
+          const participantsEmpty = (event.participants || []).length === 0;
+          const hasCount = (event as any).participantsCount > 0;
+          if (participantsEmpty && hasCount) {
+            const eid = event._id || event.id;
+            if (!eid) {
+              console.warn('[social] skip fetching full event — no id:', event);
+              return event;
+            }
+            try {
+              const full = await eventRepository.getEventById(eid);
+              return full || event;
+            } catch (err: any) {
+              console.warn('[social] failed to fetch full event', eid, err?.message || err);
+              return event;
+            }
+          }
+          return event;
+        }));
+
         // Filtrar: solo eventos a los que el usuario ESTÁ unido
-        const myEvents = allEvents.filter(event =>
-          event.participants.some(
-            p => (typeof p.userId === 'object' ? p.userId._id : p.userId) === user?._id?.toString()
-          )
-        );
+        const currentUserId = user?.id || user?._id;
+        const localJoined = await getLocalJoined(currentUserId?.toString());
+        console.log('[social] currentUserId:', currentUserId, 'events fetched:', populatedEvents.length, 'localJoined:', localJoined.length);
+        const myEvents = populatedEvents.filter(event => {
+          const participants = event.participants || [];
+          const eid = event._id || event.id;
+          // If we have a local marker, include it regardless of participants array
+          if (eid && localJoined.includes(eid)) return true;
+
+          // Log quick info for debugging
+          if (participants.length === 0) {
+            // nothing to check
+            return false;
+          }
+          const matched = participants.some(p => {
+            const pId = typeof p.userId === 'object' ? (p.userId as any)._id || (p.userId as any).id : p.userId;
+            // Compare by id OR by email as a fallback (some endpoints may return different shapes)
+            const byId = currentUserId ? pId === currentUserId?.toString() : false;
+            const byEmail = (p as any).email && user?.email ? (p as any).email === user.email : false;
+            if (byId || byEmail) return true;
+            return false;
+          });
+          if (!matched) {
+            // Useful debug when a user is expected to be part of an event
+            console.debug('[social] user not in event participants:', { eventId: event._id || event.id, participantsCount: participants.length });
+          }
+          return matched;
+        });
         
         // Ordenar por fecha (próximos primero)
         myEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -77,11 +142,11 @@ export default function SocialScreen() {
       {events.length > 0 ? (
         <FlatList
           data={events}
-          keyExtractor={item => item._id}
+            keyExtractor={item => item.id || item._id}
           renderItem={({ item }) => (
             <EventCard 
               event={item}
-              onPress={() => handleEventPress(item._id)}
+                onPress={() => handleEventPress(item.id || item._id)}
             />
           )}
           contentContainerStyle={styles.listContent}

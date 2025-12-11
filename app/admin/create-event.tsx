@@ -33,11 +33,11 @@ export default function CreateEventScreen() {
   const dateInputRef = useRef<TextInput>(null);
   const timeInputRef = useRef<TextInput>(null);
 
-  // Verificar que sea admin
-  if (user?.role !== 'admin') {
+  // Verificar que sea organizer (ahora los organizadores pueden crear campañas)
+  if (user?.role !== 'organizer') {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Acceso denegado. Solo administradores pueden crear eventos.</Text>
+        <Text style={styles.errorText}>Acceso denegado. Solo organizadores pueden crear eventos.</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>Volver</Text>
         </TouchableOpacity>
@@ -193,7 +193,7 @@ export default function CreateEventScreen() {
       description,
       date: eventDate.toISOString(),
       location,
-      organizer,
+      organizer: organizer || user?.name || '',
       targetGoal: parseInt(targetGoal),
       category: validCategory
     };

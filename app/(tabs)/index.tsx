@@ -2,11 +2,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import EventCard from '../../components/EventCard';
 import { Event } from '../../core/models/Event';
@@ -29,10 +29,17 @@ export default function HomeScreen() {
       if (allEvents) {
         // Filtrar: a los que el usuario NO está unido (mostrar todos los estados)
         const availableEvents = allEvents.filter(event => {
-          const isNotParticipant = !event.participants.some(
-            p => (typeof p.userId === 'object' ? p.userId._id : p.userId) === user?._id?.toString()
-          );
-          return isNotParticipant;
+          try {
+            const participants = event.participants || [];
+            const isNotParticipant = !participants.some(
+              p => (typeof p.userId === 'object' ? p.userId._id : p.userId) === user?._id?.toString()
+            );
+            return isNotParticipant;
+          } catch (err) {
+            // If structure is unexpected, include the event so it can be inspected in UI
+            console.warn('Unexpected event.participants structure for event', event._id, err);
+            return true;
+          }
         });
         
         setEvents(availableEvents);
@@ -76,11 +83,11 @@ export default function HomeScreen() {
       {events.length > 0 ? (
         <FlatList
           data={events}
-          keyExtractor={item => item._id}
+          keyExtractor={item => item.id || item._id}
           renderItem={({ item }) => (
             <EventCard 
               event={item}
-              onPress={() => handleEventPress(item._id)}
+              onPress={() => handleEventPress(item.id || item._id)}
             />
           )}
           contentContainerStyle={styles.listContent}
